@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryRequest {
-    @NotBlank(message = "name must not be blank")
+    @NotBlank(message = "Name must not be blank")
     private String name;
 }
