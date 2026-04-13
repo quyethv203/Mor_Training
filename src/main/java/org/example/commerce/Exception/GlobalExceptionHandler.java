@@ -68,5 +68,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ErrorResponse error = ErrorResponse.builder().code(HttpStatus.NOT_FOUND.value()).status(HttpStatus.NOT_FOUND.getReasonPhrase()).errorCode("ERR_NOT_FOUND").message(ex.getMessage()).data(null).build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(AlreadyExistedResource.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyExistedResource(AlreadyExistedResource ex) {
+        ErrorResponse error = ErrorResponse.builder().code(HttpStatus.CONFLICT.value()).status(HttpStatus.CONFLICT.getReasonPhrase()).errorCode("ERR_ALREADY_EXISTED").message(ex.getMessage()).data(null).build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
 
 }
