@@ -1,0 +1,9 @@
+ALTER TABLE  products MODIFY is_deleted BOOLEAN NOT NULL DEFAULT false;
+UPDATE products SET is_deleted = false WHERE is_deleted = NULL;
+
+ALTER TABLE products MODIFY price DECIMAL(10, 2) NOT NULL ;
+ALTER TABLE orders MODIFY total_amount DECIMAL(12, 2);
+ALTER TABLE order_items MODIFY unit_price DECIMAL(10, 2) NOT NULL;
+
+ALTER TABLE categories ADD created_at DATETIME DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE categories ADD modified_at DATETIME DEFAULT CURRENT_TIMESTAMP
