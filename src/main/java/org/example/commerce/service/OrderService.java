@@ -67,7 +67,7 @@ public class OrderService {
         }
         order.setTotalAmount(totalAmount);
         order.setStatus("UNPAID");
-        order.setItem(orderItemList);
+        order.setItems(orderItemList);
         orderRepository.save(order);
         return orderMapper.toResponse(order);
     }

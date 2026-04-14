@@ -23,6 +23,7 @@ public class Product extends BaseEntity {
 
     private String name;
 
+    @Column(name = "des")
     private String description;
 
     private BigDecimal price;

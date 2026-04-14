@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
-    @Mapping(source = "items", target = "item")
+    @Mapping(source = "items", target = "items")
     Order toEntity(OrderRequest request);
 
     OrderResponse toResponse(Order order);
