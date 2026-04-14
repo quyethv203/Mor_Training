@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Getter
 @Setter
-public class OrderItem extends BaseEntity{
+public class OrderItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -29,6 +29,5 @@ public class OrderItem extends BaseEntity{
 
     private Integer quantity;
 
-    @Column(name = "unitPrice")
     private BigDecimal unitPrice;
 }
