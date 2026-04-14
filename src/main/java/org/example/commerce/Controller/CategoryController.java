@@ -2,6 +2,7 @@ package org.example.commerce.Controller;
 
 import jakarta.validation.Valid;
 import org.example.commerce.DTO.Request.CategoryRequest;
+import org.example.commerce.DTO.Response.CategoryResponse;
 import org.example.commerce.Entity.Category;
 import org.example.commerce.Service.CategoryService;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class CategoryController {
     }
 
     @GetMapping("")
-    public List<Category> getAllCategory() {
+    public List<CategoryResponse> getAllCategory() {
         return categoryService.getAllCategory();
     }
 
