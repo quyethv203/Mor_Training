@@ -1,10 +1,14 @@
 package org.example.commerce.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.example.commerce.dto.response.ErrorResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,7 +24,7 @@ import java.util.Map;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, @NonNull HttpHeaders headers, HttpStatusCode status, @NonNull WebRequest request) {
         Map<String, String> validationErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> validationErrors.put(error.getField(), error.getDefaultMessage()));
         ErrorResponse errorRes = ErrorResponse.builder()
@@ -34,7 +38,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(@NonNull HttpMessageNotReadableException ex, @NonNull HttpHeaders headers, @NonNull HttpStatusCode status, @NonNull WebRequest request) {
         ErrorResponse error = ErrorResponse.builder()
                 .code(HttpStatus.BAD_REQUEST.value())
                 .status(HttpStatus.BAD_REQUEST.getReasonPhrase())
@@ -46,7 +50,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, @NonNull HttpHeaders headers, @NonNull HttpStatusCode status, @NonNull WebRequest request) {
         ErrorResponse error = ErrorResponse.builder()
                 .code(HttpStatus.METHOD_NOT_ALLOWED.value())
                 .status(HttpStatus.METHOD_NOT_ALLOWED.getReasonPhrase())
@@ -64,7 +68,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                 .errorCode("UNCATEGORIZED_ERROR")
-                .message("An unexpected error occurred")
+                .message(ex.getMessage())
                 .data(null)
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -82,5 +86,39 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(ExpiredJwtException.class)
+    public  ResponseEntity<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .status(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .errorCode("TOKEN_EXPIRED")
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public  ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .code(HttpStatus.FORBIDDEN.value())
+                .status(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .errorCode("ACCESS_DENIED")
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public  ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .status(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .errorCode("UNAUTHORIZED")
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 }
