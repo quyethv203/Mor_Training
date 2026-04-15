@@ -1,7 +1,10 @@
 package org.example.commerce.config;
 
+import org.example.commerce.exception.DelegatedAccessDeniedHandler;
+import org.example.commerce.exception.DelegatedAuthenticationEntryPoint;
 import org.example.commerce.security.CustomUserDetailsService;
 import org.example.commerce.security.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,15 +28,25 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtAuthFilter jwtAuthFilter) {
-        this.customUserDetailsService = customUserDetailsService;
+
+    private DelegatedAuthenticationEntryPoint authenticationEntryPoint;
+    private DelegatedAccessDeniedHandler accessDeniedHandler;
+
+    public SecurityConfig(@Qualifier("delegatedAccessDeniedHandler") DelegatedAccessDeniedHandler accessDeniedHandler, @Qualifier("delegatedAuthenticationEntryPoint") DelegatedAuthenticationEntryPoint authenticationEntryPoint, JwtAuthFilter jwtAuthFilter, CustomUserDetailsService customUserDetailsService) {
+        this.accessDeniedHandler = accessDeniedHandler;
+        this.authenticationEntryPoint = authenticationEntryPoint;
         this.jwtAuthFilter = jwtAuthFilter;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .anyRequest().authenticated()
@@ -44,7 +57,8 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private AuthenticationProvider authenticationProvider() {
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
@@ -56,7 +70,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
 
     }
