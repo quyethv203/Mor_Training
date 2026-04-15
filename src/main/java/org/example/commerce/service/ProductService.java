@@ -11,6 +11,7 @@ import org.example.commerce.repository.CategoryRepository;
 import org.example.commerce.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -63,6 +64,7 @@ public class ProductService {
         return productMapper.toResponse(updatedProduct);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteProduct(Integer id) {
         Product existedProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
