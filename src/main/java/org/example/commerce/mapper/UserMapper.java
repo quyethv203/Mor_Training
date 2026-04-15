@@ -10,6 +10,6 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
     RegisterResponse toRegisterResponse(User user);
 
-    @Mapping(source = "token", target = "token")
+    @Mapping(source = "token", target = "accessToken")
     LoginResponse toLoginResponse(String token);
 }

@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,19 +24,31 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private int jwtExpirationMs;
 
+    @Value("${jwt.refresh-expiration}")
+    private int refreshTokenExpirationMs;
+
     public String generateToken(String email) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email);
+        return createToken(claims, email, jwtExpirationMs);
     }
 
-    private String createToken(Map<String, Object> claims, String email) {
+    public String generateRefreshToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, email, refreshTokenExpirationMs);
+    }
+
+    private String createToken(Map<String, Object> claims, String email, int expirationMs) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + jwtExpirationMs))
+                .setExpiration(new Date(new Date().getTime() + expirationMs))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public Instant getRefreshTokenExpiryDate() {
+        return Instant.now().plusMillis(refreshTokenExpirationMs);
     }
 
     private Key getSignKey() {
@@ -72,6 +85,5 @@ public class JwtService {
         final String username = extractEmail(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
-
 
 }
