@@ -44,7 +44,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{productId")
+    @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse<ProductResponse>> getDetailProduct(@PathVariable Integer productId) {
         ProductResponse product = productService.getDetailProduct(productId);
         ApiResponse<ProductResponse> response = ApiResponse.<ProductResponse>builder()
