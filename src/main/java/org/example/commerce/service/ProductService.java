@@ -55,6 +55,10 @@ public class ProductService {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
+        if(productRepository.existsByNameAndIdNot(request.getName(), id)) {
+            throw new AlreadyExistedResource("Name of the product existed!");
+        }
+
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found!"));
 
@@ -66,8 +70,15 @@ public class ProductService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteProduct(Integer id) {
-        Product existedProduct = productRepository.findById(id)
+        Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        productRepository.delete(existedProduct);
+        productRepository.delete(existingProduct);
+    }
+
+    public ProductResponse getDetailProduct(Integer productId) {
+        Product existingProduct = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+
+        return productMapper.toResponse(existingProduct);
     }
 }

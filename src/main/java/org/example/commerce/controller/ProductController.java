@@ -44,6 +44,17 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{productId")
+    public ResponseEntity<ApiResponse<ProductResponse>> getDetailProduct(@PathVariable Integer productId) {
+        ProductResponse product = productService.getDetailProduct(productId);
+        ApiResponse<ProductResponse> response = ApiResponse.<ProductResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Products detail retrieved successfully")
+                .data(product)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse product = productService.createProduct(request);
