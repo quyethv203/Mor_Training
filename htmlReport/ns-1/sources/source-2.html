@@ -1,0 +1,212 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OrderService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">org.example.commerce.service</a>
+</div>
+
+<h1>Coverage Summary for Class: OrderService (org.example.commerce.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OrderService</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/44)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package org.example.commerce.service;
+&nbsp;
+&nbsp;import jakarta.transaction.Transactional;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import org.example.commerce.dto.request.OrderItemRequest;
+&nbsp;import org.example.commerce.dto.request.OrderRequest;
+&nbsp;import org.example.commerce.dto.response.OrderDetailResponse;
+&nbsp;import org.example.commerce.dto.response.OrderItemResponse;
+&nbsp;import org.example.commerce.dto.response.OrderResponse;
+&nbsp;import org.example.commerce.entity.Order;
+&nbsp;import org.example.commerce.entity.OrderItem;
+&nbsp;import org.example.commerce.entity.Product;
+&nbsp;import org.example.commerce.exception.ResourceNotFoundException;
+&nbsp;import org.example.commerce.mapper.OrderMapper;
+&nbsp;import org.example.commerce.repository.OrderRepository;
+&nbsp;import org.example.commerce.repository.ProductRepository;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class OrderService {
+&nbsp;    private final OrderRepository orderRepository;
+&nbsp;    private final OrderMapper orderMapper;
+&nbsp;    private final ProductRepository productRepository;
+&nbsp;
+<b class="nc">&nbsp;    public OrderService(OrderRepository orderRepository, OrderMapper orderMapper, ProductRepository productRepository) {</b>
+<b class="nc">&nbsp;        this.orderRepository = orderRepository;</b>
+<b class="nc">&nbsp;        this.orderMapper = orderMapper;</b>
+<b class="nc">&nbsp;        this.productRepository = productRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    public List&lt;OrderResponse&gt; getAllOrder() {
+<b class="nc">&nbsp;        List&lt;Order&gt; orders = orderRepository.findAll();</b>
+<b class="nc">&nbsp;        return orders.stream().map(orderMapper::toResponse).toList();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public OrderResponse createOrder(@Valid OrderRequest request) {
+<b class="nc">&nbsp;        Order order = new Order();</b>
+<b class="nc">&nbsp;        BigDecimal totalAmount = BigDecimal.ZERO;</b>
+<b class="nc">&nbsp;        List&lt;OrderItem&gt; orderItemList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (OrderItemRequest itemRequest : request.getItems()) {</b>
+<b class="nc">&nbsp;            Product product = productRepository.findById(itemRequest.getProductId())</b>
+<b class="nc">&nbsp;                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Product not found with ID: &quot; + itemRequest.getProductId()));</b>
+&nbsp;
+<b class="nc">&nbsp;            if (product.getStock() &lt; itemRequest.getQuantity()) {</b>
+<b class="nc">&nbsp;                throw new RuntimeException(&quot;Out of stock: &quot; + product.getName());</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            product.setStock(product.getStock() - itemRequest.getQuantity());</b>
+<b class="nc">&nbsp;            System.out.println(&quot;Product Price: &quot; + product.getPrice());</b>
+&nbsp;
+<b class="nc">&nbsp;            OrderItem item = new OrderItem();</b>
+<b class="nc">&nbsp;            item.setQuantity(itemRequest.getQuantity());</b>
+<b class="nc">&nbsp;            item.setUnitPrice(product.getPrice());</b>
+<b class="nc">&nbsp;            item.setOrder(order);</b>
+<b class="nc">&nbsp;            item.setProduct(product);</b>
+&nbsp;
+<b class="nc">&nbsp;            BigDecimal subTotal = item.getUnitPrice().multiply(new BigDecimal(item.getQuantity()));</b>
+<b class="nc">&nbsp;            totalAmount = totalAmount.add(subTotal);</b>
+&nbsp;
+<b class="nc">&nbsp;            productRepository.save(product);</b>
+<b class="nc">&nbsp;            orderItemList.add(item);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        order.setTotalAmount(totalAmount);</b>
+<b class="nc">&nbsp;        order.setStatus(&quot;UNPAID&quot;);</b>
+<b class="nc">&nbsp;        order.setItems(orderItemList);</b>
+<b class="nc">&nbsp;        orderRepository.save(order);</b>
+<b class="nc">&nbsp;        return orderMapper.toResponse(order);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public OrderDetailResponse getDetailOrder(Integer orderId) {
+<b class="nc">&nbsp;        Order order = orderRepository.findDetailById(orderId);</b>
+<b class="nc">&nbsp;        List&lt;OrderItemResponse&gt; orderItemResponses = order.getItems().stream()</b>
+<b class="nc">&nbsp;                .map(orderItem -&gt; {</b>
+<b class="nc">&nbsp;                    OrderItemResponse orderItemResponse = new OrderItemResponse();</b>
+<b class="nc">&nbsp;                    orderItemResponse.setProductId(orderItem.getProduct().getId());</b>
+<b class="nc">&nbsp;                    orderItemResponse.setUnitPrice(orderItem.getUnitPrice());</b>
+<b class="nc">&nbsp;                    orderItemResponse.setQuantity(orderItem.getQuantity());</b>
+<b class="nc">&nbsp;                    orderItemResponse.setSubTotal(orderItem.getUnitPrice().multiply(new BigDecimal(orderItem.getQuantity())));</b>
+<b class="nc">&nbsp;                    return orderItemResponse;</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .toList();</b>
+<b class="nc">&nbsp;        return new OrderDetailResponse(</b>
+<b class="nc">&nbsp;                order.getId(),</b>
+<b class="nc">&nbsp;                order.getTotalAmount(),</b>
+<b class="nc">&nbsp;                order.getStatus(),</b>
+&nbsp;                orderItemResponses
+&nbsp;        );
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-16 12:43</div>
+</div>
+</body>
+</html>
