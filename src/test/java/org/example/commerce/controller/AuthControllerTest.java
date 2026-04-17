@@ -1,5 +1,9 @@
 package org.example.commerce.controller;
 
+import org.example.commerce.dto.request.RegisterRequest;
+import org.example.commerce.dto.response.RegisterResponse;
+import org.example.commerce.enums.Role;
+import org.example.commerce.exception.AlreadyExistedResource;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import tools.jackson.databind.json.JsonMapper;
 import org.example.commerce.dto.request.LoginRequest;
@@ -74,4 +78,50 @@ public class AuthControllerTest {
 
         verify(userService, times(1)).loginUser(any(LoginRequest.class));
     }
+
+    @Test
+    void register_notExistedByEmail_returnRegisterResponse() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setName("quyet hoang van");
+        request.setEmail("quyethoang@gmail.com");
+        request.setPassword("244466666");
+
+        RegisterResponse registerResponse = new RegisterResponse();
+        registerResponse.setId(1);
+        registerResponse.setName("quyet hoang van");
+        registerResponse.setEmail("quyethoang@gmail.com");
+        registerResponse.setRoles(String.valueOf(Role.USER));
+
+        when(userService.registerUser(any(RegisterRequest.class))).thenReturn(registerResponse);
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(201))
+                .andExpect(jsonPath("$.message").value("Registed successfully"))
+                .andExpect(jsonPath("$.data.name").value("quyet hoang van"))
+                .andExpect(jsonPath("$.data.email").value("quyethoang@gmail.com"))
+                .andExpect(jsonPath("$.data.roles").value("USER"));
+
+        verify(userService, times(1)).registerUser(any(RegisterRequest.class));
+    }
+
+    @Test
+    void register_existedEmail_return409() throws Exception{
+        RegisterRequest request = new RegisterRequest();
+        request.setName("quyet hoang van");
+        request.setEmail("quyethoang@gmail.com");
+        request.setPassword("244466666");
+
+        when(userService.registerUser(request)).thenThrow(new AlreadyExistedResource("User already existed"));
+
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.status").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("User already existed"));
+    }
+
 }
