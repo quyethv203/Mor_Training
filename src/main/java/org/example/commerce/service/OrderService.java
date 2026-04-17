@@ -1,7 +1,6 @@
 package org.example.commerce.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import org.example.commerce.dto.request.OrderItemRequest;
 import org.example.commerce.dto.request.OrderRequest;
 import org.example.commerce.dto.response.OrderDetailResponse;
@@ -10,6 +9,7 @@ import org.example.commerce.dto.response.OrderResponse;
 import org.example.commerce.entity.Order;
 import org.example.commerce.entity.OrderItem;
 import org.example.commerce.entity.Product;
+import org.example.commerce.exception.OutOfStockException;
 import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.OrderMapper;
 import org.example.commerce.repository.OrderRepository;
@@ -39,7 +39,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse createOrder(@Valid OrderRequest request) {
+    public OrderResponse createOrder( OrderRequest request) {
         Order order = new Order();
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItemList = new ArrayList<>();
@@ -49,11 +49,10 @@ public class OrderService {
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + itemRequest.getProductId()));
 
             if (product.getStock() < itemRequest.getQuantity()) {
-                throw new RuntimeException("Out of stock: " + product.getName());
+                throw new OutOfStockException("Out of stock: " + product.getName());
             }
 
             product.setStock(product.getStock() - itemRequest.getQuantity());
-            System.out.println("Product Price: " + product.getPrice());
 
             OrderItem item = new OrderItem();
             item.setQuantity(itemRequest.getQuantity());

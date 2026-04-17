@@ -47,8 +47,7 @@ public class ProductControllerTest {
 
     @Test
     void getProductWithCategory_withoutToken_return401() throws Exception {
-        mvc.perform(get("/products/with-category"))
-                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/products/with-category")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -81,15 +80,7 @@ public class ProductControllerTest {
 
         when(customUserDetailsService.loadUserByUsername("quyethoang@gmail.com")).thenReturn(customUserDetails);
         when(productService.getProductWithCategory()).thenReturn(productResponses);
-        mvc.perform(get("/products/with-category")
-                        .header("Authorization", "Bearer fake-token"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("Products with category retrieved successfully"))
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].name").value("Chảo chống dính"))
-                .andExpect(jsonPath("$.data[0].price").value(350000.00))
-                .andExpect(jsonPath("$.data[1].name").value("Cánh gà nướng"));
+        mvc.perform(get("/products/with-category").header("Authorization", "Bearer fake-token")).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200)).andExpect(jsonPath("$.message").value("Products with category retrieved successfully")).andExpect(jsonPath("$.data.length()").value(2)).andExpect(jsonPath("$.data[0].name").value("Chảo chống dính")).andExpect(jsonPath("$.data[0].price").value(350000.00)).andExpect(jsonPath("$.data[1].name").value("Cánh gà nướng"));
 
         verify(productService, times(1)).getProductWithCategory();
     }

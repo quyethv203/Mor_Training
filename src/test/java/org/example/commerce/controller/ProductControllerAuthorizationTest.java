@@ -4,12 +4,10 @@ import org.example.commerce.enums.Role;
 import org.example.commerce.security.CustomUserDetails;
 import org.example.commerce.security.CustomUserDetailsService;
 import org.example.commerce.security.JwtService;
-import org.example.commerce.service.ProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,9 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductControllerAuthorizationTest {
     @Autowired
     private MockMvc mvc;
-
-    @Autowired
-    private ProductService productService;
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
