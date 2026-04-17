@@ -8,6 +8,7 @@ import org.example.commerce.entity.RefreshToken;
 import org.example.commerce.entity.User;
 import org.example.commerce.enums.Role;
 import org.example.commerce.exception.AlreadyExistedResource;
+import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.UserMapper;
 import org.example.commerce.repository.UserRepository;
 import org.example.commerce.security.JwtService;
@@ -61,7 +62,7 @@ public class UserService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String accessToken = jwtService.generateToken(request.getEmail());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
