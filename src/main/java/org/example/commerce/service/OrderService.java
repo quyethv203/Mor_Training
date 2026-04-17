@@ -39,7 +39,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse createOrder(@Valid OrderRequest request) {
+    public OrderResponse createOrder( OrderRequest request) {
         Order order = new Order();
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItemList = new ArrayList<>();
