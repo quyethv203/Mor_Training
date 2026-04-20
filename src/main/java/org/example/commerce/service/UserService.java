@@ -8,13 +8,13 @@ import org.example.commerce.entity.RefreshToken;
 import org.example.commerce.entity.User;
 import org.example.commerce.enums.Role;
 import org.example.commerce.exception.AlreadyExistedResource;
-import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.UserMapper;
 import org.example.commerce.repository.UserRepository;
+import org.example.commerce.security.CustomUserDetails;
 import org.example.commerce.security.JwtService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +26,6 @@ public class UserService {
     private final UserMapper userMapper;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
-
-    @Value("${jwt.expiration}")
-    private int jwtExpirationMs;
 
     public UserService(AuthenticationManager authenticationManager, UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
@@ -48,21 +45,20 @@ public class UserService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Role.USER);
+        user.setRole(Role.USER);
 
         return userMapper.toRegisterResponse(userRepository.save(user));
     }
 
     public LoginResponse loginUser(LoginRequest request) {
-        authenticationManager.authenticate(
+         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
                 )
         );
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        CustomUserDetails customUserDetails = (CustomUserDetails) auth.getPrincipal();
+        User user = customUserDetails.getUser();
 
         String accessToken = jwtService.generateToken(request.getEmail());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
@@ -71,21 +67,22 @@ public class UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .tokenType("Bearer")
-                .expiresIn(jwtExpirationMs)
+                .expiresIn(jwtService.getExpirationMs())
                 .build();
     }
 
     public LoginResponse refreshAccessToken(String refreshTokenString) {
-        RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenString);
-        User user = refreshToken.getUser();
+        RefreshToken oldToken = refreshTokenService.validateRefreshToken(refreshTokenString);
+        refreshTokenService.revokeToken(refreshTokenString);
 
-        String newAccessToken = jwtService.generateToken(user.getEmail());
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(oldToken.getUser());
+        String newAccessToken = jwtService.generateToken(oldToken.getUser().getEmail());
 
         return LoginResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshTokenString)
+                .refreshToken(newRefreshToken.getToken())
                 .tokenType("Bearer")
-                .expiresIn(jwtExpirationMs)
+                .expiresIn(jwtService.getExpirationMs())
                 .build();
     }
 }

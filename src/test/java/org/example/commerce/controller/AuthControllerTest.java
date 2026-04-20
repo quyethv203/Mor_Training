@@ -90,7 +90,7 @@ public class AuthControllerTest {
         registerResponse.setId(1);
         registerResponse.setName("quyet hoang van");
         registerResponse.setEmail("quyethoang@gmail.com");
-        registerResponse.setRoles(String.valueOf(Role.USER));
+        registerResponse.setRole(Role.USER);
 
         when(userService.registerUser(any(RegisterRequest.class))).thenReturn(registerResponse);
 
@@ -99,10 +99,10 @@ public class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(201))
-                .andExpect(jsonPath("$.message").value("Registed successfully"))
+                .andExpect(jsonPath("$.message").value("Registered successfully"))
                 .andExpect(jsonPath("$.data.name").value("quyet hoang van"))
                 .andExpect(jsonPath("$.data.email").value("quyethoang@gmail.com"))
-                .andExpect(jsonPath("$.data.roles").value("USER"));
+                .andExpect(jsonPath("$.data.role").value("USER"));
 
         verify(userService, times(1)).registerUser(any(RegisterRequest.class));
     }

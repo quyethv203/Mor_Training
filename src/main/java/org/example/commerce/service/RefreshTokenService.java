@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@Transactional
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
@@ -21,6 +20,7 @@ public class RefreshTokenService {
         this.jwtService = jwtService;
     }
 
+    @Transactional
     public RefreshToken createRefreshToken(User user) {
         refreshTokenRepository.deleteByUser(user);
 
@@ -44,6 +44,7 @@ public class RefreshTokenService {
         return refreshToken;
     }
 
+    @Transactional
     public void revokeToken(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token not found"));
@@ -51,7 +52,7 @@ public class RefreshTokenService {
         refreshTokenRepository.save(refreshToken);
     }
 
-    public void revokeAllUserTokens(User user) {
-        refreshTokenRepository.deleteByUser(user);
-    }
+//    public void revokeAllUserTokens(User user) {
+//        refreshTokenRepository.deleteByUser(user);
+//    }
 }

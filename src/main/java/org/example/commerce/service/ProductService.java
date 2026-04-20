@@ -9,11 +9,14 @@ import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.ProductMapper;
 import org.example.commerce.repository.CategoryRepository;
 import org.example.commerce.repository.ProductRepository;
+import org.example.commerce.specification.ProductSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -28,8 +31,9 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Page<ProductResponse> getAllProduct(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toResponse);
+    public Page<ProductResponse> filterProducts(String name, Integer categoryId, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        Specification<Product> spe = ProductSpecification.filter(name, categoryId, minPrice, maxPrice);
+        return productRepository.findAll(spe, pageable).map(productMapper::toResponse);
     }
 
     public List<ProductResponse> getProductWithCategory() {
@@ -37,6 +41,7 @@ public class ProductService {
         return products.stream().map(productMapper::toResponse).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse createProduct(ProductRequest request) {
         if (productRepository.existsByName(request.getName())) {
             throw new AlreadyExistedResource("Name of the product existed!");
@@ -51,6 +56,7 @@ public class ProductService {
         return productMapper.toResponse(product);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse updateProduct(ProductRequest request, Integer id) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));

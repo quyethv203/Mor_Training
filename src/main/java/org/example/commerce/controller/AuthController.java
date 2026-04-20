@@ -27,14 +27,14 @@ public class AuthController {
         RegisterResponse registerResponse = userService.registerUser(request);
         ApiResponse<RegisterResponse> userResponseApiResponse = ApiResponse.<RegisterResponse>builder()
                 .code(HttpStatus.CREATED.value())
-                .message("Registed successfully")
+                .message("Registered successfully")
                 .data(registerResponse)
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseApiResponse);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse loginResponse = userService.loginUser(request);
         ApiResponse<LoginResponse> loginResponseApiResponse = ApiResponse.<LoginResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -45,7 +45,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(@RequestParam String refreshToken) {
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(@RequestBody String refreshToken) {
         LoginResponse newTokens = userService.refreshAccessToken(refreshToken);
         ApiResponse<LoginResponse> response = ApiResponse.<LoginResponse>builder()
                 .code(HttpStatus.OK.value())
@@ -56,7 +56,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestParam String refreshToken) {
+    public ResponseEntity<ApiResponse<String>> logout(@RequestBody String refreshToken) {
         refreshTokenService.revokeToken(refreshToken);
         ApiResponse<String> response = ApiResponse.<String>builder()
                 .code(HttpStatus.OK.value())

@@ -9,6 +9,7 @@ import org.example.commerce.dto.response.OrderResponse;
 import org.example.commerce.entity.Order;
 import org.example.commerce.entity.OrderItem;
 import org.example.commerce.entity.Product;
+import org.example.commerce.enums.OrderStatus;
 import org.example.commerce.exception.OutOfStockException;
 import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.OrderMapper;
@@ -63,18 +64,18 @@ public class OrderService {
             BigDecimal subTotal = item.getUnitPrice().multiply(new BigDecimal(item.getQuantity()));
             totalAmount = totalAmount.add(subTotal);
 
-            productRepository.save(product);
             orderItemList.add(item);
         }
         order.setTotalAmount(totalAmount);
-        order.setStatus("UNPAID");
+        order.setStatus(OrderStatus.UNPAID);
         order.setItems(orderItemList);
         orderRepository.save(order);
         return orderMapper.toResponse(order);
     }
 
     public OrderDetailResponse getDetailOrder(Integer orderId) {
-        Order order = orderRepository.findDetailById(orderId);
+        Order order = orderRepository.findDetailById(orderId)
+                .orElseThrow(()-> new ResourceNotFoundException("Order not found with Id:" + orderId));
         List<OrderItemResponse> orderItemResponses = order.getItems().stream()
                 .map(orderItem -> {
                     OrderItemResponse orderItemResponse = new OrderItemResponse();
@@ -88,7 +89,7 @@ public class OrderService {
         return new OrderDetailResponse(
                 order.getId(),
                 order.getTotalAmount(),
-                order.getStatus(),
+                order.getStatus().name(),
                 orderItemResponses
         );
     }

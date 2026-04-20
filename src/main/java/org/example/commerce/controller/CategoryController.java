@@ -4,8 +4,6 @@ import jakarta.validation.Valid;
 import org.example.commerce.dto.request.CategoryRequest;
 import org.example.commerce.dto.response.ApiResponse;
 import org.example.commerce.dto.response.CategoryResponse;
-import org.example.commerce.dto.response.OrderResponse;
-import org.example.commerce.entity.Category;
 import org.example.commerce.service.CategoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/category")
+@RequestMapping("/categories")
 public class CategoryController {
 
     private final CategoryService categoryService;

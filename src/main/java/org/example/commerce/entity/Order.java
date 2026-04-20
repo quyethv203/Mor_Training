@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.commerce.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,7 +23,8 @@ public class Order extends BaseEntity {
 
     private BigDecimal totalAmount;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;

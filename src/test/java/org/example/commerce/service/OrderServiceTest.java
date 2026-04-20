@@ -9,7 +9,9 @@ import org.example.commerce.entity.Category;
 import org.example.commerce.entity.Order;
 import org.example.commerce.entity.OrderItem;
 import org.example.commerce.entity.Product;
+import org.example.commerce.enums.OrderStatus;
 import org.example.commerce.exception.OutOfStockException;
+import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.OrderMapper;
 import org.example.commerce.repository.OrderRepository;
 import org.example.commerce.repository.ProductRepository;
@@ -43,16 +45,16 @@ public class OrderServiceTest {
 
     @Test
     void getAllOrder_validRequest_returnListOrderResponse() {
-        Order order_1 = new Order(1, BigDecimal.valueOf(200000), "UNPAID", new ArrayList<>());
-        Order order_2 = new Order(2, BigDecimal.valueOf(25000), "UNPAID", new ArrayList<>());
-        List<Order> orders = List.of(order_1, order_2);
+        Order order1 = new Order(1, BigDecimal.valueOf(200000), OrderStatus.UNPAID, new ArrayList<>());
+        Order order2 = new Order(2, BigDecimal.valueOf(25000), OrderStatus.UNPAID, new ArrayList<>());
+        List<Order> orders = List.of(order1, order2);
 
-        OrderResponse response_1 = new OrderResponse(1, BigDecimal.valueOf(200000), "UNPAID");
-        OrderResponse response_2 = new OrderResponse(2, BigDecimal.valueOf(25000), "UNPAID");
+        OrderResponse response1 = new OrderResponse(1, BigDecimal.valueOf(200000), OrderStatus.UNPAID.name());
+        OrderResponse response2 = new OrderResponse(2, BigDecimal.valueOf(25000), OrderStatus.UNPAID.name());
 
         when(orderRepository.findAll()).thenReturn(orders);
-        when(orderMapper.toResponse(order_1)).thenReturn(response_1);
-        when(orderMapper.toResponse(order_2)).thenReturn(response_2);
+        when(orderMapper.toResponse(order1)).thenReturn(response1);
+        when(orderMapper.toResponse(order2)).thenReturn(response2);
 
         List<OrderResponse> results = orderService.getAllOrder();
         assertNotNull(results);
@@ -65,54 +67,49 @@ public class OrderServiceTest {
 
     @Test
     void createOrder_validRequest_returnOrderResponse() {
-        OrderItemRequest itemRequest_1 = new OrderItemRequest(1, 1);
-        OrderItemRequest itemRequest_2 = new OrderItemRequest(2, 2);
-        OrderRequest orderRequest = new OrderRequest(List.of(itemRequest_1, itemRequest_2));
+        OrderItemRequest itemRequest1 = new OrderItemRequest(1, 1);
+        OrderItemRequest itemRequest2 = new OrderItemRequest(2, 2);
+        OrderRequest orderRequest = new OrderRequest(List.of(itemRequest1, itemRequest2));
 
-        Category category_1 = new Category(1, "Đồ công nghệ", new ArrayList<>());
-        Category category_2 = new Category(2, "Đồ ăn", new ArrayList<>());
+        Category category1 = new Category(1, "Đồ công nghệ", new ArrayList<>());
+        Category category2 = new Category(2, "Đồ ăn", new ArrayList<>());
 
-        Product product_1 = new Product(1, "Iphone 15", "Iphone 15 series", BigDecimal.valueOf(25000000), 10, category_1);
-        Product product_2 = new Product(2, "Cánh gà nướng", "Cánh gà nướng siêu ngon", BigDecimal.valueOf(25000), 5, category_2);
+        Product product1 = new Product(1, "Iphone 15", "Iphone 15 series", BigDecimal.valueOf(25000000), 10, category1);
+        Product product2 = new Product(2, "Cánh gà nướng", "Cánh gà nướng siêu ngon", BigDecimal.valueOf(25000), 5, category2);
 
         Order order = new Order();
 
         BigDecimal totalAmount = BigDecimal.ZERO;
 
-        when(productRepository.findById(itemRequest_1.getProductId())).thenReturn(Optional.of(product_1));
-        when(productRepository.findById(itemRequest_2.getProductId())).thenReturn(Optional.of(product_2));
+        when(productRepository.findById(itemRequest1.getProductId())).thenReturn(Optional.of(product1));
+        when(productRepository.findById(itemRequest2.getProductId())).thenReturn(Optional.of(product2));
 
-        product_1.setStock(product_1.getStock() - itemRequest_1.getQuantity());
-        product_2.setStock(product_2.getStock() - itemRequest_2.getQuantity());
+        product1.setStock(product1.getStock() - itemRequest1.getQuantity());
+        product2.setStock(product2.getStock() - itemRequest2.getQuantity());
 
-        OrderItem orderItem_1 = new OrderItem(1, product_1, order, 1, product_1.getPrice());
-        OrderItem orderItem_2 = new OrderItem(2, product_2, order, 2, product_2.getPrice());
-        List<OrderItem> orderItemList = List.of(orderItem_1, orderItem_2);
+        OrderItem orderItem1 = new OrderItem(1, product1, order, 1, product1.getPrice());
+        OrderItem orderItem2 = new OrderItem(2, product2, order, 2, product2.getPrice());
+        List<OrderItem> orderItemList = List.of(orderItem1, orderItem2);
 
-        totalAmount = totalAmount.add(orderItem_1.getUnitPrice().multiply(BigDecimal.valueOf(orderItem_1.getQuantity())));
-        totalAmount = totalAmount.add(orderItem_2.getUnitPrice().multiply(BigDecimal.valueOf(orderItem_2.getQuantity())));
-
-        when(productRepository.save(product_1)).thenReturn(product_1);
-        when(productRepository.save(product_2)).thenReturn(product_2);
+        totalAmount = totalAmount.add(orderItem1.getUnitPrice().multiply(BigDecimal.valueOf(orderItem1.getQuantity())));
+        totalAmount = totalAmount.add(orderItem2.getUnitPrice().multiply(BigDecimal.valueOf(orderItem2.getQuantity())));
 
         order.setId(1);
         order.setTotalAmount(totalAmount);
-        order.setStatus("UNPAID");
+        order.setStatus(OrderStatus.UNPAID);
         order.setItems(orderItemList);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
 
-        OrderResponse orderResponse = new OrderResponse(order.getId(), order.getTotalAmount(), order.getStatus());
+        OrderResponse orderResponse = new OrderResponse(order.getId(), order.getTotalAmount(), order.getStatus().name());
         when(orderMapper.toResponse(any(Order.class))).thenReturn(orderResponse);
 
         OrderResponse result = orderService.createOrder(orderRequest);
         assertEquals(totalAmount, result.getTotalAmount());
         assertEquals("UNPAID", result.getStatus());
 
-        verify(productRepository, times(1)).findById(product_1.getId());
-        verify(productRepository, times(1)).findById(product_2.getId());
-        verify(productRepository, times(1)).save(product_1);
-        verify(productRepository, times(1)).save(product_2);
+        verify(productRepository, times(1)).findById(product1.getId());
+        verify(productRepository, times(1)).findById(product2.getId());
         verify(orderRepository, times(1)).save(any(Order.class));
     }
 
@@ -145,14 +142,14 @@ public class OrderServiceTest {
         Product product = new Product(1, "Iphone 15", "Iphone 15 series", BigDecimal.valueOf(25000000), 10, category);
         OrderItem orderItem = new OrderItem(1, product, order, 1, product.getPrice());
 
-        Order existingOrder = new Order(1, BigDecimal.valueOf(25000000), "UNPAID", List.of(orderItem));
+        Order existingOrder = new Order(1, BigDecimal.valueOf(25000000), OrderStatus.UNPAID, List.of(orderItem));
 
-        when(orderRepository.findDetailById(orderId)).thenReturn(existingOrder);
+        when(orderRepository.findDetailById(orderId)).thenReturn(Optional.of(existingOrder));
 
         BigDecimal subTotal = existingOrder.getItems().get(0).getUnitPrice().multiply(BigDecimal.valueOf(existingOrder.getItems().get(0).getQuantity()));
         OrderItemResponse orderItemResponse = new OrderItemResponse(existingOrder.getItems().get(0).getProduct().getId(), existingOrder.getItems().get(0).getQuantity(), existingOrder.getItems().get(0).getUnitPrice(), subTotal);
 
-        OrderDetailResponse detail = new OrderDetailResponse(existingOrder.getId(), existingOrder.getTotalAmount(), existingOrder.getStatus(), List.of(orderItemResponse));
+        OrderDetailResponse detail = new OrderDetailResponse(existingOrder.getId(), existingOrder.getTotalAmount(), existingOrder.getStatus().name(), List.of(orderItemResponse));
 
         OrderDetailResponse result = orderService.getDetailOrder(orderId);
         assertEquals(detail, result);
@@ -160,6 +157,15 @@ public class OrderServiceTest {
         assertEquals(detail.getTotalAmount(), result.getTotalAmount());
 
         verify(orderRepository, times(1)).findDetailById(orderId);
+    }
 
+    @Test
+    void getDetailOrder_notFound_throwResourceNotFoundException() {
+        when(orderRepository.findDetailById(99)).thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> orderService.getDetailOrder(99)
+        );
     }
 }
