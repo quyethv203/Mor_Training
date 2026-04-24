@@ -40,7 +40,6 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build Image
-        working-directory: Commerce
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/mor_training:${{ github.sha }} .
 
       - name: Push to Docker Hub
