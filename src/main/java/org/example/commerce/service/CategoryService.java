@@ -8,6 +8,7 @@ import org.example.commerce.entity.Category;
 import org.example.commerce.exception.AlreadyExistedResource;
 import org.example.commerce.mapper.CategoryMapper;
 import org.example.commerce.repository.CategoryRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class CategoryService {
         return categoryRepository.findAll().stream().map(categoryMapper::toResponse).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
         if (categoryRepository.existsByName(request.getName())) {

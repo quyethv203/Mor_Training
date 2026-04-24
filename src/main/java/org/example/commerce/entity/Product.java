@@ -17,8 +17,8 @@ import java.math.BigDecimal;
 @Setter
 @SoftDelete(columnName = "is_deleted")
 public class Product extends BaseEntity {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String name;

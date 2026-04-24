@@ -33,16 +33,16 @@ public class CategoryServiceTest {
 
     @Test
     void getAllCategory_validRequest_returnListCategoryResponse() {
-        Category category_1 = new Category(1, "Đồ ăn", new ArrayList<>());
-        Category category_2 = new Category(2, "Đồ gia dụng", new ArrayList<>());
-        List<Category> categoryList = List.of(category_1, category_2);
+        Category category1 = new Category(1, "Đồ ăn", new ArrayList<>());
+        Category category2 = new Category(2, "Đồ gia dụng", new ArrayList<>());
+        List<Category> categoryList = List.of(category1, category2);
 
-        CategoryResponse res_1 = new CategoryResponse(1, "Đồ ăn");
-        CategoryResponse res_2 = new CategoryResponse(2, "Đồ gia dụng");
+        CategoryResponse res1 = new CategoryResponse(1, "Đồ ăn");
+        CategoryResponse res2 = new CategoryResponse(2, "Đồ gia dụng");
 
         when(categoryRepository.findAll()).thenReturn(categoryList);
-        when(categoryMapper.toResponse(category_1)).thenReturn(res_1);
-        when(categoryMapper.toResponse(category_2)).thenReturn(res_2);
+        when(categoryMapper.toResponse(category1)).thenReturn(res1);
+        when(categoryMapper.toResponse(category2)).thenReturn(res2);
 
         List<CategoryResponse> result = categoryService.getAllCategory();
         assertNotNull(result);
@@ -73,7 +73,7 @@ public class CategoryServiceTest {
     }
 
     @Test
-    void createCategory_existedCategory_throwAlreadyExistedResourceException() {
+    void createCategory_existingCategory_throwAlreadyExistedResourceException() {
         CategoryRequest request = new CategoryRequest("Đồ công nghệ");
 
         when(categoryRepository.existsByName(request.getName())).thenReturn(true);

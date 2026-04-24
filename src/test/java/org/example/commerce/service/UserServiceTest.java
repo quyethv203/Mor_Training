@@ -11,19 +11,19 @@ import org.example.commerce.exception.AlreadyExistedResource;
 import org.example.commerce.exception.ResourceNotFoundException;
 import org.example.commerce.mapper.UserMapper;
 import org.example.commerce.repository.UserRepository;
+import org.example.commerce.security.CustomUserDetails;
 import org.example.commerce.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,11 +63,11 @@ public class UserServiceTest {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Role.USER);
+        user.setRole(Role.USER);
 
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        RegisterResponse registerResponse = new RegisterResponse(1, "quyethv", "quyethoang@gmail.com", "USER");
+        RegisterResponse registerResponse = new RegisterResponse(1, "quyethv", "quyethoang@gmail.com", Role.USER);
 
         when(userMapper.toRegisterResponse(any(User.class))).thenReturn(registerResponse);
 
@@ -75,7 +75,7 @@ public class UserServiceTest {
 
         assertNotNull(result);
         assertEquals(user.getEmail(), result.getEmail());
-        assertEquals(user.getRoles().name(), result.getRoles());
+        assertEquals(user.getRole(), result.getRole());
 
         verify(userRepository, times(1)).existsByEmail(request.getEmail());
         verify(userRepository, times(1)).save(any(User.class));
@@ -101,10 +101,11 @@ public class UserServiceTest {
     @Test
     void loginUser_validRequest_returnToken() {
         LoginRequest request = new LoginRequest("quyethoang@gmail.com", "123456");
-        authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
         User existingUser = new User(1, "quyethv", "quyethoang@gmail.com", "123456", Role.USER);
-        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(existingUser));
+        CustomUserDetails customUserDetails = new CustomUserDetails(existingUser);
+        Authentication auth = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
 
         String accessToken = "fake-token";
         RefreshToken refreshToken = new RefreshToken(1, existingUser, accessToken, Instant.parse("2026-12-31T10:00:00.00Z"), false);
@@ -122,23 +123,19 @@ public class UserServiceTest {
         assertEquals(loginResponse.getAccessToken(), result.getAccessToken());
         assertEquals(loginResponse.getRefreshToken(), result.getRefreshToken());
 
-        verify(userRepository, times(1)).findByEmail(request.getEmail());
     }
 
     @Test
     void loginUser_notFoundEmail_throwResourceNotFoundException() {
         LoginRequest request = new LoginRequest("quyethoang@gmail.com", "123456");
-        authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
-        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
-
-        ResourceNotFoundException exception =assertThrows(
+        ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                ()-> userService.loginUser(request)
+                () -> userService.loginUser(request)
         );
 
         assertEquals("User not found", exception.getMessage());
-
-        verify(userRepository, times(1)).findByEmail(request.getEmail());
     }
 }

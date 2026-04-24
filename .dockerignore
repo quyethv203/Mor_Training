@@ -1,0 +1,22 @@
+# Java
+target/
+*.jar
+*.class
+.mvn/
+
+# Git
+.gitignore
+.git
+.gitattributes
+
+# IDE
+.idea/
+
+# Test
+test/
+
+# Logs
+logs/
+*.log
+*.log.*
+

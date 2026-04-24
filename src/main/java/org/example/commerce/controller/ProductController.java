@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -23,8 +24,12 @@ public class ProductController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(Pageable pageable) {
-        Page<ProductResponse> products = productService.getAllProduct(pageable);
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(@RequestParam(required = false) String name,
+                                                                             @RequestParam(required = false) Integer categoryId,
+                                                                             @RequestParam(required = false) BigDecimal minPrice,
+                                                                             @RequestParam(required = false) BigDecimal maxPrice,
+                                                                             Pageable pageable) {
+        Page<ProductResponse> products = productService.filterProducts(name, categoryId, minPrice, maxPrice, pageable);
         ApiResponse<Page<ProductResponse>> response = ApiResponse.<Page<ProductResponse>>builder()
                 .code(HttpStatus.OK.value())
                 .message("Products retrieved successfully")
@@ -32,6 +37,7 @@ public class ProductController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/with-category")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductWithCategory() {
@@ -80,10 +86,6 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Integer id) {
         productService.deleteProduct(id);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .code(HttpStatus.OK.value())
-                .message("Product deleted successfully")
-                .build();
         return ResponseEntity.noContent().build();
     }
 

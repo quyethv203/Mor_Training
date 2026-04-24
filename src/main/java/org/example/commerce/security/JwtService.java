@@ -2,13 +2,13 @@ package org.example.commerce.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
@@ -32,18 +32,13 @@ public class JwtService {
         return createToken(claims, email, jwtExpirationMs);
     }
 
-    public String generateRefreshToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email, refreshTokenExpirationMs);
-    }
-
     private String createToken(Map<String, Object> claims, String email, int expirationMs) {
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + expirationMs))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(new Date().getTime() + expirationMs))
+                .signWith(getSignKey())
                 .compact();
     }
 
@@ -64,6 +59,8 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public int getExpirationMs() { return jwtExpirationMs; }
+
     private <T> T extractClaim(String token, Function<Claims, T> claimsTFunction) {
         final Claims claims = extractAllClaims(token);
         return claimsTFunction.apply(claims);
@@ -71,10 +68,10 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(getSignKey())
+                .verifyWith((SecretKey) getSignKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
