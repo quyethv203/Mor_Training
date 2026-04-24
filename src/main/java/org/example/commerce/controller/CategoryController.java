@@ -37,7 +37,7 @@ public class CategoryController {
         CategoryResponse categoryResponse = categoryService.createCategory(request);
         ApiResponse<CategoryResponse> response = ApiResponse.<CategoryResponse>builder()
                 .code(HttpStatus.CREATED.value())
-                .message("Category created successfully")
+                .message("Category created successfully!")
                 .data(categoryResponse)
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

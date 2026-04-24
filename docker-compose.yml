@@ -1,0 +1,34 @@
+services:
+  app:
+    build: quyethv/mor_training:v1.0
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_PROFILES_ACTIVE:
+      jwt.secret-key: ${JWT_SECRET}
+      jwt.expiration: ${JWT_EXPIRATION_MS}
+      jwt.refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS}
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:8.0-oraclelinux9
+    container_name: mysql_database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: mor_training
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  mysql_data:

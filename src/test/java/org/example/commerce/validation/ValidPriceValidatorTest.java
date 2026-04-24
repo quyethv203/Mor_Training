@@ -1,6 +1,5 @@
 package org.example.commerce.validation;
 
-import org.example.commerce.validation.annotation.ValidPrice;
 import org.example.commerce.validation.validator.ValidPriceValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
