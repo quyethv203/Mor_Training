@@ -23,7 +23,7 @@ jobs:
           cache: maven
 
       - name: Run test
-        uses: ./mvn clean test
+        run: ./mvn clean test
 
   build-and-push-Docker:
     needs: build-and-test
