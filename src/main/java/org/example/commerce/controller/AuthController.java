@@ -27,7 +27,7 @@ public class AuthController {
         RegisterResponse registerResponse = userService.registerUser(request);
         ApiResponse<RegisterResponse> userResponseApiResponse = ApiResponse.<RegisterResponse>builder()
                 .code(HttpStatus.CREATED.value())
-                .message("Registered successfully")
+                .message("Registered successfully!")
                 .data(registerResponse)
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseApiResponse);
