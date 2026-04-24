@@ -23,7 +23,9 @@ jobs:
           cache: maven
 
       - name: Run test
-        run: ./mvnw clean test
+        run: |
+          chmod +x mvnw
+          ./mvnw clean test
 
   build-and-push-Docker:
     needs: build-and-test
